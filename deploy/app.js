@@ -13,7 +13,7 @@ const cache = redis.createClient({ host: "upbit-redis", port: 6379 })
 const access_key = process.env.UPBIT_OPEN_API_ACCESS_KEY || ''
 const secret_key = process.env.UPBIT_OPEN_API_SECRET_KEY || ''
 const server_url = process.env.UPBIT_OPEN_API_SERVER_URL || 'https://api.upbit.com'
-const server_wss = process.env.UPBIT_OPEN_API_SERVER_URL || 'wss://api.upbit.com/websocket/v1'
+const server_wss = process.env.UPBIT_OPEN_API_SERVER_WSS || 'wss://api.upbit.com/websocket/v1'
 
 const socket = new wsClient(server_wss)
 socket.on("connect", () => {
@@ -43,7 +43,8 @@ function getWallet() {
             return mWallet
         })
         .catch((error) => {
-            res.json({ "error": -2 })
+            console.log(error)
+            return error
         })
 }
 
@@ -58,17 +59,13 @@ function currencyFormat(items) {
 app.use(morgan("combined"))
 app.use('/static', express.static(__dirname + '/static'))
 app.set('view engine', 'ejs')
-app.enable('trust proxy');
+app.enable('trust proxy')
 
 app.get("/", (req, res) => {
     res.render("index")
 })
 
-var wsSession = []
-
 io.sockets.on('connection', (client) => {
-    wsSession.push(client)
-
     client.on('wallet', () => {
         cache.get('wallet', (err, cdata) => {
             if(err || cdata == null) {
@@ -78,6 +75,7 @@ io.sockets.on('connection', (client) => {
                         client.emit('wallet', data)
                     })
                     .catch((err) => {
+                        console.log(err)
                         client.emit('error', err)
                     })
                 return
@@ -85,17 +83,10 @@ io.sockets.on('connection', (client) => {
             client.emit('wallet', JSON.parse(cdata))
         })
     })
-
-    client.on('disconnect', (reason) => {
-        if(reason === "transport error")
-            wsSession = wsSession.filter((_, idx) => idx != wsSession.indexOf(client))
-    })
 })
 
 socket.on('message', (data) => {
-    wsSession.forEach(session => {
-        session.emit('message', JSON.parse(Buffer.from(data).toString()))
-    })
+    io.emit('message', JSON.parse(Buffer.from(data).toString()))
 })
 
 server.listen(3000, () => {
