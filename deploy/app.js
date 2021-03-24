@@ -76,7 +76,8 @@ io.sockets.on('connection', (client) => {
                         cache.setex('wallet', 3, JSON.stringify(data))
                         client.emit('wallet', data)
                         data.forEach(item => {
-                            client.emit('message', lastPrice[item.currency])
+                            if(item.currency != "KRW")
+                                client.emit('message', lastPrice[item.currency])
                         })
                     })
                     .catch((err) => {
@@ -88,7 +89,8 @@ io.sockets.on('connection', (client) => {
             const data = JSON.parse(cdata)
             client.emit('wallet', data)
             data.forEach(item => {
-                client.emit('message', lastPrice[item.currency])
+                if(item.currency != "KRW")
+                    client.emit('message', lastPrice[item.currency])
             })
         })
     })
