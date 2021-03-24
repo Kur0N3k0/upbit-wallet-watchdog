@@ -140,7 +140,7 @@
                 var afterPrice = price * KuroNekoWallet[code].balance
 
                 var profit = Math.round(afterPrice - startPrice)
-                var percentage = afterPrice > startPrice ? (afterPrice / startPrice) * 100 : -(1 - afterPrice / startPrice) * 100
+                var percentage = afterPrice > startPrice ? (afterPrice / startPrice) * 100 - 100 : -(1 - afterPrice / startPrice) * 100
                 percentage = percentage.toFixed(2)
 
                 if(percentage > 0) {
