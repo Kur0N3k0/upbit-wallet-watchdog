@@ -75,7 +75,9 @@ io.sockets.on('connection', (client) => {
                     .then((data) => {
                         cache.setex('wallet', 3, JSON.stringify(data))
                         client.emit('wallet', data)
-                        client.emit('message', lastPrice[data.currency])
+                        data.forEach(item => {
+                            client.emit('message', lastPrice[item.currency])
+                        })
                     })
                     .catch((err) => {
                         console.log(err)
@@ -85,14 +87,16 @@ io.sockets.on('connection', (client) => {
             }
             const data = JSON.parse(cdata)
             client.emit('wallet', data)
-            client.emit('message', lastPrice[data.currency])
+            data.forEach(item => {
+                client.emit('message', lastPrice[item.currency])
+            })
         })
     })
 })
 
 socket.on('message', (data) => {
     const result = JSON.parse(Buffer.from(data).toString())
-    lastPrice[result.code] = result
+    lastPrice[result.code.substr(4)] = result
     io.emit('message', result)
 })
 
