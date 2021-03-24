@@ -53,7 +53,7 @@ function currencyFormat(items) {
     items.forEach(item => {
         result.push("KRW-" + item.currency)
     })
-    return [{"ticket":uuidv4()},{"type":"ticker","codes":result}]
+    return [{"ticket":uuidv4()},{"type":"ticker","codes":result,"isOnlyRealtime":true}]
 }
 
 app.use(morgan("combined"))
@@ -65,6 +65,8 @@ app.get("/", (req, res) => {
     res.render("index")
 })
 
+var lastPrice = {}
+
 io.sockets.on('connection', (client) => {
     client.on('wallet', () => {
         cache.get('wallet', (err, cdata) => {
@@ -73,6 +75,7 @@ io.sockets.on('connection', (client) => {
                     .then((data) => {
                         cache.setex('wallet', 3, JSON.stringify(data))
                         client.emit('wallet', data)
+                        client.emit('message', lastPrice[data.currency])
                     })
                     .catch((err) => {
                         console.log(err)
@@ -80,13 +83,17 @@ io.sockets.on('connection', (client) => {
                     })
                 return
             }
-            client.emit('wallet', JSON.parse(cdata))
+            const data = JSON.parse(cdata)
+            client.emit('wallet', data)
+            client.emit('message', lastPrice[data.currency])
         })
     })
 })
 
 socket.on('message', (data) => {
-    io.emit('message', JSON.parse(Buffer.from(data).toString()))
+    const result = JSON.parse(Buffer.from(data).toString())
+    lastPrice[result.code] = result
+    io.emit('message', result)
 })
 
 server.listen(3000, () => {
