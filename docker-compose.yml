@@ -1,0 +1,26 @@
+version: '3.3'
+
+services:
+  main:
+    image: upbit-watchdog
+    container_name: upbit-watchdog
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      UPBIT_OPEN_API_ACCESS_KEY: 
+      UPBIT_OPEN_API_SECRET_KEY: 
+      UPBIT_OPEN_API_SERVER_URL: https://api.upbit.com
+      UPBIT_OPEN_API_SERVER_URL: wss://api.upbit.com/websocket/v1
+    volumes:
+      - ./deploy:/app
+    ports:
+      - 7777:3000
+    expose:
+      - 3000
+  
+  cache:
+    image: redis:latest
+    container_name: upbit-redis
+    expose:
+      - 6379
