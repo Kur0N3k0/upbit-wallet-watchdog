@@ -102,6 +102,10 @@ socket.on('message', (data) => {
     io.emit('message', result)
 })
 
+socket.on('ping', () => {
+    socket.emit('pong')
+})
+
 server.listen(3000, () => {
     console.log("[*] upbit wallet watchdog")
 })
